@@ -4,17 +4,9 @@ local utils = require('nvim-treesitter.ts_utils')
 local parsers = require('nvim-treesitter.parsers')
 local M = {}
 
-local MODES = {
-  n = "call matchit#Match_wrapper('',1,'n')",
-  x = "call matchit#Match_wrapper('',1,'v')",
-  o = "call matchit#Match_wrapper('',1,'o')",
-}
+local MODES = { 'n', 'x', 'o' }
 
-local function match(fallback)
-  if not parsers.has_parser() then
-    return vim.cmd(fallback)
-  end
-
+local function match()
   local root = ts.get_node()
 
   if not root then
@@ -66,14 +58,12 @@ function M.setup()
           buffer = buf,
         }
 
-        for mode, fallback in pairs(MODES) do
-          vim.keymap.set(mode, '%', function()
-            match(fallback)
-          end, opts)
+        for _, mode in ipairs(MODES) do
+          vim.keymap.set(mode, '%', match, opts)
         end
       end,
       detach = function(buf)
-        for mode, _ in pairs(MODES) do
+        for _, mode in ipairs(MODES) do
           vim.keymap.del(mode, '%', { buffer = buf })
         end
       end,
