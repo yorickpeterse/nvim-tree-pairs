@@ -5,6 +5,13 @@ opposing end of a Tree-sitter node, such as brackets, quotes, and more.
 
 [![A recording of using the plugin](https://asciinema.org/a/654974.svg)](https://asciinema.org/a/654974)
 
+# What does it do?
+
+- If the cursor is on the start or end of a Tree-sitter node (e.g. a `{`), jump
+  to the other end
+- If the cursor is somewhere in the middle of a Tree-sitter node, jump to the
+  end of the node
+
 # Why?
 
 When using Tree-sitter, the `%` motion of NeoVim doesn't always work reliably,
