@@ -1,10 +1,25 @@
 local api = vim.api
 local ts = vim.treesitter
-local utils = require('nvim-treesitter.ts_utils')
 local parsers = require('nvim-treesitter.parsers')
 local M = {}
 
 local MODES = { 'n', 'x', 'o' }
+
+local function jump_to_node(node, jump_to_end)
+  local start_row, start_col, end_row, end_col = node:range(false)
+
+  -- This is needed so that in operator pending mode we don't miss any
+  -- characters.
+  if api.nvim_get_mode().mode == 'no' then
+    vim.cmd('normal! v')
+  end
+
+  if jump_to_end then
+    api.nvim_win_set_cursor(0, { end_row + 1, end_col - 1 })
+  else
+    api.nvim_win_set_cursor(0, { start_row + 1, start_col })
+  end
+end
 
 local function match()
   local root = ts.get_node()
@@ -26,9 +41,9 @@ local function match()
     -- This approach allows you to e.g. jump from an "if" to a matching "end",
     -- regardless of whether the cursor is on the "i" or "f".
     if ts.is_in_node_range(tail, cursor_row, cursor_col) then
-      utils.goto_node(head, false)
+      jump_to_node(head, false)
     else
-      utils.goto_node(tail, true)
+      jump_to_node(tail, true)
     end
   else
     -- This approach checks if the cursor is at exactly the first or last
