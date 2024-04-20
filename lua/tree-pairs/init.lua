@@ -20,6 +20,7 @@ local MODES = {
 
 -- The node types for which to fall back to using matchit.
 local FALLBACK = {
+  attribute_value = true,
   block_comment = true,
   line_comment = true,
   string_content = true,
