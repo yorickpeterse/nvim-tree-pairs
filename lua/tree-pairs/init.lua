@@ -42,6 +42,11 @@ local PAIRS = {
   ['`'] = true,
 }
 
+-- File types for which to _not_ enable the plugin.
+local DISABLE_FT = {
+  netrw = true,
+}
+
 local function jump_to_node(node, jump_to_end)
   local start_row, start_col, end_row, end_col = node:range(false)
 
@@ -150,6 +155,11 @@ function M.setup()
     desc = 'Sets up tree-pairs for a buffer',
     callback = function()
       local buf = api.nvim_get_current_buf()
+
+      if DISABLE_FT[vim.bo[buf].ft] then
+        return
+      end
+
       local opts = {
         desc = 'Jump to the opposite end of the current Tree-sitter node',
         buffer = buf,
