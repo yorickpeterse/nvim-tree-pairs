@@ -1,5 +1,6 @@
 local api = vim.api
 local ts = vim.treesitter
+local fn = vim.fn
 local parsers = require('nvim-treesitter.parsers')
 local M = {}
 local AUGROUP = api.nvim_create_augroup('tree-pairs', {})
@@ -8,13 +9,13 @@ local AUGROUP = api.nvim_create_augroup('tree-pairs', {})
 -- strategies.
 local MODES = {
   n = function()
-    vim.fn['matchit#Match_wrapper']('', 1, 'n')
+    vim.cmd('execute ":normal \\<Plug>(MatchitNormalForward)"')
   end,
   x = function()
-    vim.fn['matchit#Match_wrapper']('', 1, 'v')
+    vim.cmd('execute ":normal \\<Plug>(MatchitVisualForward)"')
   end,
   o = function()
-    vim.fn['matchit#Match_wrapper']('', 1, 'o')
+    vim.cmd('execute ":normal \\<Plug>(MatchitOperationForward)"')
   end,
 }
 
@@ -75,27 +76,17 @@ local function match(buf, fallback)
   local has_parser, _ = pcall(vim.treesitter.get_parser, buf)
 
   if not has_parser then
-    if PAIRS[char_under_cursor()] then
-      fallback()
-    end
-
-    return
+    return fallback()
   end
 
   local root = ts.get_node()
 
   if not root then
-    if PAIRS[char_under_cursor()] then
-      fallback()
-    end
-
-    return
+    return fallback()
   end
 
   if FALLBACK[root:type()] then
-    if PAIRS[char_under_cursor()] then
-      return fallback()
-    end
+    return fallback()
   end
 
   local pos = api.nvim_win_get_cursor(0)
