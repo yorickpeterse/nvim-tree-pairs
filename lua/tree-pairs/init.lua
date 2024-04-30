@@ -48,8 +48,22 @@ local DISABLE_FT = {
   netrw = true,
 }
 
-local function jump_to_node(node, jump_to_end)
+local function node_range(node)
   local start_row, start_col, end_row, end_col = node:range(false)
+
+  -- Certain parsers (e.g. Markdown) don't report column numbers. In such cases
+  -- we treat the last column of the current line as the end column.
+  if end_col == 0 then
+    end_col = fn.col({ end_row, '$' }) - 1
+  else
+    end_col = end_col - 1
+  end
+
+  return start_row, start_col, end_row, end_col
+end
+
+local function jump_to_node(node, jump_to_end)
+  local start_row, start_col, end_row, end_col = node_range(node)
 
   -- This is needed so that in operator pending mode we don't miss any
   -- characters.
@@ -58,7 +72,7 @@ local function jump_to_node(node, jump_to_end)
   end
 
   if jump_to_end then
-    api.nvim_win_set_cursor(0, { end_row + 1, end_col - 1 })
+    api.nvim_win_set_cursor(0, { end_row + 1, end_col })
   else
     api.nvim_win_set_cursor(0, { start_row + 1, start_col })
   end
@@ -73,13 +87,24 @@ local function char_under_cursor()
 end
 
 local function match(buf, fallback)
-  local has_parser, _ = pcall(vim.treesitter.get_parser, buf)
+  local has_parser, parser = pcall(ts.get_parser, buf)
 
   if not has_parser then
     return fallback()
   end
 
-  local root = ts.get_node()
+  local pos = api.nvim_win_get_cursor(0)
+  local cursor_row = pos[1] - 1
+  local cursor_col = pos[2]
+
+  -- We need to make sure the range is parsed first, otherwise getting the root
+  -- node might not work reliably when using injected languages.
+  parser:parse({ cursor_row, cursor_col })
+
+  local root = parser:named_node_for_range(
+    { cursor_row, cursor_col, cursor_row, cursor_col },
+    { ignore_injections = false }
+  )
 
   if not root then
     return fallback()
@@ -89,9 +114,6 @@ local function match(buf, fallback)
     return fallback()
   end
 
-  local pos = api.nvim_win_get_cursor(0)
-  local cursor_row = pos[1] - 1
-  local cursor_col = pos[2]
   local head = root:child(0)
   local tail = root:child(root:child_count() - 1)
 
@@ -126,15 +148,14 @@ local function match(buf, fallback)
     -- character in the node. This is used as a fallback for nodes without
     -- children, such as a boolean literal. This way if the cursor is at "t" in
     -- "true", you can jump to the "e" and the other way around.
-    local start_row, start_col, _ = root:start()
-    local end_row, end_col, _ = root:end_()
+    local start_row, start_col, end_row, end_col = node_range(root)
 
-    if cursor_row == end_row and cursor_col == end_col - 1 then
+    if cursor_row == end_row and cursor_col == end_col then
       api.nvim_win_set_cursor(0, { start_row + 1, start_col })
     else
       -- End columns point to a position _after_ the end of the node, so we have
       -- to subtract 1.
-      api.nvim_win_set_cursor(0, { end_row + 1, end_col - 1 })
+      api.nvim_win_set_cursor(0, { end_row + 1, end_col })
     end
   end
 end
