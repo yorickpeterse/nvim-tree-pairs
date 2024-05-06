@@ -97,6 +97,33 @@ local function match(buf, fallback)
   local cursor_row = pos[1] - 1
   local cursor_col = pos[2]
 
+  local line = api.nvim_get_current_line()
+
+  if #line > 0 then
+    if cursor_col == #line then
+      -- In visual mode it's possible to move the cursor to the newline at the
+      -- end (= beyond the last line character). In this case Tree-sitter's
+      -- parse() method returns the parent/surrounding node, rather than
+      -- whatever node is directly to the left of the cursor.
+      cursor_col = cursor_col - 1
+
+      while
+        cursor_col > 0 and line:sub(cursor_col + 1, cursor_col + 1):match('%s')
+      do
+        cursor_col = cursor_col - 1
+      end
+    elseif line:sub(1, cursor_col + 1):match('^%s') then
+      -- If the cursor is instead in between leading whitespace and the first
+      -- non-whitespace character, we treat that first non-whitespace character
+      -- as the start, matching the behaviour of matchit.
+      local pos = line:find('%S')
+
+      if pos then
+        cursor_col = pos - 1
+      end
+    end
+  end
+
   -- We need to make sure the range is parsed first, otherwise getting the root
   -- node might not work reliably when using injected languages.
   parser:parse({ cursor_row, cursor_col })
