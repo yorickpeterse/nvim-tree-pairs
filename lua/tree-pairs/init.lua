@@ -96,7 +96,6 @@ local function match(buf, fallback)
   local pos = api.nvim_win_get_cursor(0)
   local cursor_row = pos[1] - 1
   local cursor_col = pos[2]
-
   local line = api.nvim_get_current_line()
 
   if #line > 0 then
@@ -112,7 +111,7 @@ local function match(buf, fallback)
       do
         cursor_col = cursor_col - 1
       end
-    elseif line:sub(1, cursor_col + 1):match('^%s') then
+    elseif line:sub(1, cursor_col + 1):match('^%s$') then
       -- If the cursor is instead in between leading whitespace and the first
       -- non-whitespace character, we treat that first non-whitespace character
       -- as the start, matching the behaviour of matchit.
