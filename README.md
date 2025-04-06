@@ -36,7 +36,6 @@ starting `e`.
 # Requirements
 
 - NeoVim `main`, 0.9.5 _might_ also work but I haven't verified this
-- [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter/)
 
 # Installation
 

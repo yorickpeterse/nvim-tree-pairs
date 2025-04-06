@@ -1,7 +1,6 @@
 local api = vim.api
 local ts = vim.treesitter
 local fn = vim.fn
-local parsers = require('nvim-treesitter.parsers')
 local M = {}
 local AUGROUP = api.nvim_create_augroup('tree-pairs', {})
 
