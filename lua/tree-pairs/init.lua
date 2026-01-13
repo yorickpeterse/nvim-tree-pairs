@@ -22,6 +22,7 @@ local MODES = {
 local FALLBACK = {
   attribute_value = true,
   block_comment = true,
+  doc_comment = true,
   line_comment = true,
   string_content = true,
   string_fragment = true,
